@@ -1,0 +1,87 @@
+# RichieDaGenius Beat Model Configuration
+# =========================================
+
+paths:
+  raw_data: "data/raw"           # Drop ZIP files here
+  processed_data: "data/processed"
+  generated_output: "data/generated"
+  model_dir: "models"
+  checkpoint: null               # Path to resume from, or null
+
+# --- Stage 1: FLP Parsing ---
+parser:
+  # Position quantisation resolution (ticks per bar)
+  # 48 = 1/48 note resolution. Captures triplets (1/6 = 8/48) and
+  # standard 1/16 (3/48) cleanly.
+  ticks_per_bar: 48
+  # Whether to extract audio features from stems in the ZIP
+  extract_audio_features: false
+  # Instruments to treat as drums (matched by channel name substring)
+  drum_keywords:
+    - "kick"
+    - "snare"
+    - "hat"
+    - "hihat"
+    - "hi-hat"
+    - "clap"
+    - "perc"
+    - "808"
+    - "rim"
+    - "tom"
+    - "crash"
+    - "open hat"
+    - "closed hat"
+    - "shaker"
+    - "cymbal"
+
+# --- Stage 2: Tokenisation ---
+tokenizer:
+  # Velocity buckets (8 levels)
+  velocity_bins: 8
+  # Duration buckets (16 levels)
+  duration_bins: 16
+  # Max sequence length per pattern
+  max_pattern_length: 512
+  # Max arrangement length (in pattern references)
+  max_arrangement_length: 128
+  # Tempo range for tempo tokens
+  tempo_min: 60
+  tempo_max: 200
+  tempo_step: 2
+
+# --- Stage 3: Model ---
+model:
+  # Transformer config
+  d_model: 256
+  n_heads: 8
+  n_layers: 6
+  d_ff: 1024
+  dropout: 0.1
+  max_seq_len: 2048
+  # Vocab is built dynamically from tokenizer
+
+# --- Stage 4: Training ---
+training:
+  batch_size: 16
+  learning_rate: 0.0003
+  weight_decay: 0.01
+  warmup_steps: 500
+  max_epochs: 200
+  patience: 20          # Early stopping patience
+  grad_clip: 1.0
+  save_every_n_epochs: 10
+  eval_split: 0.1       # 10% of data for validation
+  seed: 42
+
+# --- Stage 5: Generation ---
+generation:
+  temperature: 0.85
+  top_k: 50
+  top_p: 0.92
+  max_length: 1024
+  # Genre hint: "trap" or "afrobeats" — affects initial tokens
+  genre_hint: null
+  # Number of beats to generate per run
+  count: 5
+  # Output tempo (BPM). null = sample from training distribution
+  tempo: null

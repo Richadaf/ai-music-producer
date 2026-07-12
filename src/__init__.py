@@ -1,0 +1,1 @@
+"""RichieDaGenius Beat Generation Model."""
