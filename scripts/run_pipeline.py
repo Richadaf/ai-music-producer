@@ -63,7 +63,10 @@ def stage_parse(cfg: dict) -> None:
 
     logger.info(f"Found {len(files)} file(s) in {raw_dir}")
     json_dir = processed_dir / "json"
-    outputs = process_raw_directory(raw_dir, json_dir, drum_keywords)
+    export_midi = cfg.get("parser", {}).get("export_midi", True)
+    outputs = process_raw_directory(
+        raw_dir, json_dir, drum_keywords, export_midi=export_midi
+    )
     logger.info(f"Parsed {len(outputs)} project(s) → {json_dir}")
 
 

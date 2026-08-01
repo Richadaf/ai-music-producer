@@ -437,7 +437,20 @@ def process_all_projects(
 
     all_tokenized = []
 
-    for json_path in sorted(json_dir.glob("*.json")):
+    # Support flat JSONs and per-beat folders from flp_parser MIDI export:
+    #   data/processed/foo.json
+    #   data/processed/foo_140/project.json
+    json_paths: list[Path] = []
+    seen: set[Path] = set()
+    for pattern in ("*.json", "*/project.json"):
+        for json_path in sorted(json_dir.glob(pattern)):
+            resolved = json_path.resolve()
+            if resolved in seen:
+                continue
+            seen.add(resolved)
+            json_paths.append(json_path)
+
+    for json_path in json_paths:
         with open(json_path) as f:
             project_data = json.load(f)
 
@@ -446,8 +459,9 @@ def process_all_projects(
 
         if tokenized["pattern_sequences"]:
             all_tokenized.append(tokenized)
+            label = json_path.parent.name if json_path.name == "project.json" else json_path.stem
             logger.info(
-                f"  {json_path.stem}: {tokenized['metadata']['num_patterns']} patterns, "
+                f"  {label}: {tokenized['metadata']['num_patterns']} patterns, "
                 f"{tokenized['metadata']['arrangement_tokens']} arrangement tokens, "
                 f"genre={genre}"
             )
