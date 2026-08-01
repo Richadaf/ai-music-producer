@@ -54,19 +54,46 @@ librosa >= 0.10.0     # Audio feature extraction (optional, for stems)
 ## Quick Start
 
 ```bash
-# 1. Install dependencies
+# 1. Install dependencies (use a venv)
+python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 
-# 2. Drop your ZIPs into data/raw/
-cp ~/beats/*.zip data/raw/
+# 2. Parse FL Studio projects and export pattern MIDIs
+#    Each beat → RDG_OUTPUT/{name}_{BPM}/*.mid + project.json
+python src/flp_parser.py \
+  "/Users/RS8/Documents/Image-Line/FL Studio/Projects" \
+  -o RDG_OUTPUT
 
-# 3. Run the full pipeline
+# Single beat:
+python src/flp_parser.py path/to/BEAT_EXAMPLE.zip -o RDG_OUTPUT
+# → RDG_OUTPUT/BEAT_EXAMPLE_140/01_Pattern_Name.mid ...
+
+# JSON only (no MIDI export):
+python src/flp_parser.py path/to/beats -o RDG_OUTPUT --no-midi
+
+# 3. Drop ZIPs into data/raw/ and run the full ML pipeline
+cp ~/beats/*.zip data/raw/
 python scripts/run_pipeline.py
 
 # 4. Generate new beats
 python src/generate.py --model models/latest.pt --count 5 --output data/generated/
 ```
 
+### MIDI export layout
+
+For each `.zip` or `.flp`, the parser writes:
+
+```
+RDG_OUTPUT/
+  BEAT_EXAMPLE_140/          # {project_stem}_{BPM}
+    project.json             # channels, patterns, arrangement metadata
+    01_Kick.mid              # one multi-track MIDI per FL pattern
+    02_Melody.mid
+    ...
+```
+
+Pattern MIDIs keep the project PPQ and tempo, name tracks after channel-rack
+instruments, and map drum-like channels to GM channel 10.
 ## Project Structure
 
 ```
